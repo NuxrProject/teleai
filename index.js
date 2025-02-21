@@ -5,7 +5,7 @@ const axios = require('axios');
 const token = '7792325812:AAEXurr11rDn8qevDiyz_-4RPhdBki7iQiE';
 
 // API key OpenAI
-const apiKey = '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';
+const apiKey = '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';
 
 // Buat instance bot Telegram
 const bot = new TelegramBot(token, { polling: true });
