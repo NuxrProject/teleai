@@ -2,10 +2,10 @@ const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
 // Token bot Telegram
-const token = 'YOUR_TELEGRAM_BOT_TOKEN';
+const token = '7792325812:AAEXurr11rDn8qevDiyz_-4RPhdBki7iQiE';
 
 // API key OpenAI
-const apiKey = 'YOUR_OPENAI_API_KEY';
+const apiKey = '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';
 
 // Buat instance bot Telegram
 const bot = new TelegramBot(token, { polling: true });
