@@ -1,0 +1,16 @@
+{
+  "name": "tele",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "nuxr",
+  "license": "ISC",
+  "description": ""
+},
+  "dependencies": {
+    "node-telegram-bot-api": "0.66.0",
+    "openai": "4.85.3"
+  },
+}
