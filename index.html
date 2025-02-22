@@ -1,14 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Setting API OpenAI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setting API Key OpenAI</title>
 </head>
 <body>
-  <h1>Setting API OpenAI</h1>
-  <form action="/set-api-key" method="post">
-    <label for="apiKey">API Key:</label>
-    <input type="text" id="apiKey" name="apiKey">
-    <button type="submit">Simpan</button>
-  </form>
+    <h2>Atur API Key OpenAI</h2>
+    <input type="text" id="apiKey" placeholder="Masukkan API Key">
+    <button onclick="updateApiKey()">Simpan</button>
+    <script>
+        async function updateApiKey() {
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) return alert("API Key harus diisi!");
+
+            const response = await fetch('/apikey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey })
+            });
+
+            const data = await response.json();
+            alert(data.message);
+        }
+    </script>
 </body>
 </html>
