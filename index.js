@@ -1,40 +1,75 @@
-require('dotenv').config();
-const { Telegraf } = require('telegraf');
-const { OpenAI } = require('openai');
 
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Bot Telegram
+const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios');
 
-// Simpan API key sementara dalam memori
-let apiKeys = {};
+// Token bot Telegram
+const token = 'YOUR_TELEGRAM_BOT_TOKEN';
 
-// Fungsi untuk mengatur API key baru
-bot.command('setkey', (ctx) => {
-    const key = ctx.message.text.split(' ')[1];
-    if (!key) {
-        return ctx.reply('Gunakan format: /setkey YOUR_OPENAI_API_KEY');
-    }
-    apiKeys[ctx.chat.id] = key;
-    ctx.reply('✅ API Key berhasil diperbarui!');
+// API key OpenAI
+let apiKey = '';
+
+// Buat instance bot Telegram
+const bot = new TelegramBot(token, { polling: true });
+
+// Fungsi untuk mengirimkan pesan ke pengguna
+const sendMessage = (chatId, text) => {
+  bot.sendMessage(chatId, text);
+};
+
+// Fungsi untuk mengirimkan jawaban dari OpenAI
+const sendAnswer = (chatId, question) => {
+  axios.post(`https://api.openai.com/v1/chat/completions`, {
+    model: 'gpt-3.5-turbo',
+    prompt: question,
+    max_tokens: 2048,
+    temperature: 0.7,
+  }, {
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+  })
+  .then(response => {
+    const answer = response.data.choices[0].text;
+    sendMessage(chatId, answer);
+  })
+  .catch(error => {
+    console.error(error);
+    sendMessage(chatId, 'Maaf, saya tidak bisa menjawab pertanyaan Anda.');
+  });
+};
+
+// Fungsi untuk menangani pesan dari pengguna
+const handleMessage = (msg) => {
+  const chatId = msg.chat.id;
+  const text = msg.text;
+
+  if (text.startsWith('/start')) {
+    sendMessage(chatId, 'Selamat datang! Saya adalah bot AI yang dapat menjawab pertanyaan Anda.');
+  } else {
+    sendAnswer(chatId, text);
+  }
+};
+
+// Fungsi untuk menangani pesan yang masuk
+bot.on('message', handleMessage);
+
+// Website setting API OpenAI
+const express = require('express');
+const app = express();
+
+app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
 });
 
-// Fungsi untuk merespons pesan menggunakan OpenAI
-bot.on('text', async (ctx) => {
-    const userKey = apiKeys[ctx.chat.id] || process.env.OPENAI_API_KEY;
-    const ai = new OpenAI({ apiKey: userKey });
-
-    try {
-        const response = await ai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: ctx.message.text }]
-        });
-
-        ctx.reply(response.choices[0].message.content);
-    } catch (error) {
-        ctx.reply('❌ Terjadi kesalahan: ' + error.message);
-    }
+app.post('/set-api-key', (req, res) => {
+  apiKey = req.body.apiKey;
+  res.send('API key telah diatur!');
 });
 
-// Menjalankan bot
-bot.launch();
-console.log('🤖 Bot telah berjalan...');
+app.listen(3000, () => {
+  console.log('Website setting API OpenAI telah siap!');
+})
