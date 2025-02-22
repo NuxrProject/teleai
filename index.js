@@ -4,7 +4,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
 // Token bot Telegram
-const token = 'YOUR_TELEGRAM_BOT_TOKEN';
+const token = '7792325812:AAEXurr11rDn8qevDiyz_-4RPhdBki7iQiE';
 
 // API key OpenAI
 let apiKey = '';
