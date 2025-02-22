@@ -1,56 +1,40 @@
-const TelegramBot = require('node-telegram-bot-api');
-const axios = require('axios');
+require('dotenv').config();
+const { Telegraf } = require('telegraf');
+const { OpenAI } = require('openai');
 
-// Token bot Telegram
-const token = '7792325812:AAEXurr11rDn8qevDiyz_-4RPhdBki7iQiE';
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// API key OpenAI
-const apiKey = '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';
+// Simpan API key sementara dalam memori
+let apiKeys = {};
 
-// Buat instance bot Telegram
-const bot = new TelegramBot(token, { polling: true });
+// Fungsi untuk mengatur API key baru
+bot.command('setkey', (ctx) => {
+    const key = ctx.message.text.split(' ')[1];
+    if (!key) {
+        return ctx.reply('Gunakan format: /setkey YOUR_OPENAI_API_KEY');
+    }
+    apiKeys[ctx.chat.id] = key;
+    ctx.reply('✅ API Key berhasil diperbarui!');
+});
 
-// Fungsi untuk mengirimkan pesan ke pengguna
-const sendMessage = (chatId, text) => {
-  bot.sendMessage(chatId, text);
-};
+// Fungsi untuk merespons pesan menggunakan OpenAI
+bot.on('text', async (ctx) => {
+    const userKey = apiKeys[ctx.chat.id] || process.env.OPENAI_API_KEY;
+    const ai = new OpenAI({ apiKey: userKey });
 
-// Fungsi untuk mengirimkan jawaban dari OpenAI
-const sendAnswer = (chatId, question) => {
-  axios.post(`https://api.openai.com/v1/chat/completions`, {
-    model: 'gpt-3.5-turbo',
-    prompt: question,
-    max_tokens: 2048,
-    temperature: 0.7,
-  }, {
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-  })
-  .then(response => {
-    const answer = response.data.choices[0].text;
-    sendMessage(chatId, answer);
-  })
-  .catch(error => {
-    console.error(error);
-    sendMessage(chatId, 'Maaf, saya tidak bisa menjawab pertanyaan Anda.');
-  });
-};
+    try {
+        const response = await ai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: ctx.message.text }]
+        });
 
-// Fungsi untuk menangani pesan dari pengguna
-const handleMessage = (msg) => {
-  const chatId = msg.chat.id;
-  const text = msg.text;
+        ctx.reply(response.choices[0].message.content);
+    } catch (error) {
+        ctx.reply('❌ Terjadi kesalahan: ' + error.message);
+    }
+});
 
-  if (text.startsWith('/start')) {
-    sendMessage(chatId, 'Selamat datang! Saya adalah bot AI yang dapat menjawab pertanyaan Anda.');
-  } else {
-    sendAnswer(chatId, text);
-  }
-};
-
-// Fungsi untuk menangani pesan yang masuk
-bot.on('message', handleMessage);
-
-console.log('Bot Telegram auto AI telah siap!');
+// Menjalankan bot
+bot.launch();
+console.log('🤖 Bot telah berjalan...');
